@@ -1,11 +1,8 @@
-package com.hs.s1.board.notice;
+package com.hs.s1.board.qna;
 
 import java.util.List;
 
-import javax.servlet.http.HttpSession;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -14,31 +11,26 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.hs.s1.board.BoardFileVO;
 import com.hs.s1.board.BoardVO;
-import com.hs.s1.member.MemberVO;
 import com.hs.s1.util.Pager;
 
 @Controller
-@RequestMapping("/notice/**")
-public class NoticeController {
+@RequestMapping("/qna/**")
+public class QnaController {
 	
 	@Autowired
-	private NoticeService noticeService;
-	
-	@Value("${board.notice.filePath}")
-	private String filePath;
+	private QnaService qnaService;
 	
 	@ModelAttribute("board")
 	public String getBoard() throws Exception {
-		return "notice";
+		return "qna";
 	}
 
 	@GetMapping("list")
 	public ModelAndView getList(Pager pager) throws Exception {
-		System.out.println("FilePath : "+filePath);
-		
 		ModelAndView mv = new ModelAndView();
-		List<BoardVO> ar = noticeService.getList(pager);
+		List<BoardVO> ar = qnaService.getList(pager);
 		mv.addObject("pager", pager);
 		mv.addObject("list", ar);
 		mv.setViewName("board/list");
@@ -48,30 +40,18 @@ public class NoticeController {
 	@GetMapping("select")
 	public ModelAndView getSelect(BoardVO boardVO) throws Exception {
 		ModelAndView mv = new ModelAndView();
-		boardVO = noticeService.getSelect(boardVO);
+		boardVO = qnaService.getSelect(boardVO);
 		mv.addObject("VO", boardVO);
 		mv.setViewName("board/select");
 		return mv;
 	}
 	
 	@GetMapping("insert")
-	public ModelAndView setInsert(HttpSession session) throws Exception {
+	public ModelAndView setInsert() throws Exception {
 		ModelAndView mv = new ModelAndView();
 		mv.addObject("VO", new BoardVO());
 		mv.addObject("act", "insert");
-		Object obj = session.getAttribute("member");
-		MemberVO memberVO = null;
-		String path = "redirect:/member/login";
-		//if(obj != null) {}
-		if(obj instanceof MemberVO) {
-			memberVO = (MemberVO)obj;
-			
-			if(memberVO.getUsername().equals("admin")) {
-				path="board/form";
-			}
-		}
-		
-		mv.setViewName(path);
+		mv.setViewName("board/form");
 		return mv;
 	}
 	
@@ -84,7 +64,7 @@ public class NoticeController {
 //			System.out.println(file.getOriginalFilename());
 //		}
 		ModelAndView mv = new ModelAndView();
-		int result = noticeService.setInsert(boardVO, files);
+		int result = qnaService.setInsert(boardVO, files);
 		mv.setViewName("redirect:./list");
 		return mv;
 	}
@@ -92,7 +72,7 @@ public class NoticeController {
 	@GetMapping("update")
 	public ModelAndView setUpdate(BoardVO boardVO) throws Exception {
 		ModelAndView mv = new ModelAndView();
-		boardVO = noticeService.getSelect(boardVO);
+		boardVO = qnaService.getSelect(boardVO);
 		mv.addObject("VO", boardVO);
 		mv.addObject("act", "update");
 		mv.setViewName("board/form");
@@ -101,7 +81,7 @@ public class NoticeController {
 	
 	@PostMapping("update")
 	public ModelAndView setUpdate(BoardVO boardVO, ModelAndView mv) throws Exception {
-		int result = noticeService.setUpdate(boardVO);
+		int result = qnaService.setUpdate(boardVO);
 		mv.setViewName("redirect:./list");
 		return mv;
 	}	
@@ -109,20 +89,25 @@ public class NoticeController {
 	@GetMapping("delete")
 	public ModelAndView setDelete(BoardVO boardVO) throws Exception {
 		ModelAndView mv = new ModelAndView();
-		int result = noticeService.setDelete(boardVO);
+		int result = qnaService.setDelete(boardVO);
 		mv.setViewName("redirect:./list");
 		return mv;
 	}
-//	-----------------------------------------------------------------
-//	fileDown
-	@GetMapping("fileDown")
-	public ModelAndView fileDown(String fileName, String ogName) throws Exception {
+	
+	@GetMapping("reply")
+	public ModelAndView setReplyInsert(BoardVO boardVO) throws Exception {
 		ModelAndView mv = new ModelAndView();
-		mv.addObject("fileName", fileName);
-		mv.addObject("ogName", ogName);
-		mv.addObject("filePath", filePath);
-		// view의 이름은 Bean의 이름과 일치
-		mv.setViewName("fileDown");
+		mv.addObject("VO", boardVO);
+		mv.addObject("act", "reply");
+		mv.setViewName("board/form");
+		return mv;
+	}
+	
+	@PostMapping("reply")
+	public ModelAndView setReplyInsert(BoardVO boardVO, MultipartFile[] files) throws Exception {
+		ModelAndView mv = new ModelAndView();
+		int result = qnaService.setReplyInsert(boardVO, files);
+		mv.setViewName("redirect:./list");
 		return mv;
 	}
 }
